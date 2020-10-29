@@ -2,6 +2,7 @@ from text_mining import TextCleaner
 import tweepy
 import click
 from dotenv import load_dotenv
+from tweepy.error import TweepError
 import os
 load_dotenv()
 
@@ -17,9 +18,18 @@ auth.set_access_token(access_token, access_token_secret)
 
 
 def get_top_words(user_name, min_freq=1):
-    print(f"tweet summary for {user_name}:")
-    api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-    user_tweets = api.user_timeline(screen_name=user_name, count=100)
+    print(f"tweet summary for @{user_name}:")
+    try:
+        api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
+        user_tweets = api.user_timeline(screen_name=user_name, count=100)
+    except TweepError as e:
+        error_code = eval(str(e))[0]['code']
+        if str(error_code) == '34':
+            print('page does not exist')
+            return None
+        else:
+            raise TweepError(e)
+
     all_tweets = []
     for i in user_tweets:
         status = api.get_status(i.id, tweet_mode="extended")
