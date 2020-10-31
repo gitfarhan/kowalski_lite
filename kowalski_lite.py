@@ -30,12 +30,16 @@ def collection(top_words_df):
         top_words_df.to_csv(filepath, index=False)
 
 
-def get_top_words(user_name, min_freq=1):
-    print(f"tweet summary for @{user_name}:")
+def get_top_words(user_name=None, keywords=None, min_freq=1):
     # collecting tweets
     try:
         api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
-        user_tweets = api.user_timeline(screen_name=user_name, count=100)
+        if user_name is not None:
+            print(f"tweet summary for @{user_name}:")
+            tweets = api.user_timeline(screen_name=user_name, count=100)
+        else:
+            print(f"tweet summary for '{keywords}':")
+            tweets = api.search(q=keywords, count=100, result_type='recent')
     except TweepError as e:
         error_code = eval(str(e))[0]['code']
         if str(error_code) == '34':
@@ -45,7 +49,7 @@ def get_top_words(user_name, min_freq=1):
             raise TweepError(e)
 
     all_tweets = []
-    for i in user_tweets:
+    for i in tweets:
         status = api.get_status(i.id, tweet_mode="extended")
         text = status.full_text
         text = " ".join(list(set(text.split())))
@@ -60,7 +64,11 @@ def get_top_words(user_name, min_freq=1):
     clean_df = cleaner.get_clean_text(text=all_tweets)
     clean_df = clean_df[clean_df['count'] > min_freq]
     clean_df = clean_df.head(10)
-    clean_df['username'] = user_name
+    if user_name is not None:
+        clean_df['username'] = user_name
+    elif keywords is not None:
+        clean_df = clean_df[~clean_df.word.isin(keywords.lower().split())]
+        clean_df['keywords'] = keywords
 
     # add time
     today = datetime.now()
@@ -73,10 +81,17 @@ def get_top_words(user_name, min_freq=1):
 
 @click.command()
 @click.option('--username', '-u')
-def main(username):
-    top_words = get_top_words(user_name=username)
-    collection(top_words_df=top_words)
-    click.echo(top_words)
+@click.option('--search', '-s')
+def main(username, search):
+    if username is not None and search is not None:
+        raise Exception('what?')
+    elif username is not None:
+        top_words = get_top_words(user_name=username)
+        collection(top_words_df=top_words)
+        click.echo(top_words)
+    else:
+        top_words = get_top_words(keywords=search)
+        click.echo(top_words)
 
 if __name__ == '__main__':
     main()
