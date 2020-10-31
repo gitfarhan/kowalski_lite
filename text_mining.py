@@ -1,14 +1,14 @@
 import pandas as pd
 from string import digits
 import re
-import os
+from pathlib import Path
 
 
 class TextCleaner:
 
 
     def __get_stop_words(self):
-        stopwords = pd.read_csv(f"stopwords.txt", names=['words'])
+        stopwords = pd.read_csv(f"{Path(Path(__file__).resolve()).parent}/stopwords.txt", names=['words'])
         return stopwords
 
     def __get_text_df(self, text):

@@ -1,6 +1,7 @@
 from text_mining import TextCleaner
 import tweepy
 import click
+from pathlib import Path
 from dotenv import load_dotenv
 from tweepy.error import TweepError
 import os
@@ -20,12 +21,13 @@ auth.set_access_token(access_token, access_token_secret)
 
 
 def collection(top_words_df):
-    if os.path.exists('collection.csv'):
-        col = pd.read_csv('collection.csv')
+    filepath = f"{Path(Path(__file__).resolve()).parent}/collection.csv"
+    if os.path.exists(filepath):
+        col = pd.read_csv(filepath)
         col = pd.concat([col, top_words_df], axis=0)
-        col.to_csv('collection.csv', index=False)
+        col.to_csv(filepath, index=False)
     else:
-        top_words_df.to_csv('collection.csv', index=False)
+        top_words_df.to_csv(filepath, index=False)
 
 
 def get_top_words(user_name, min_freq=1):
