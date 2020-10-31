@@ -19,15 +19,25 @@ access_token_secret = os.getenv('access_token_secret')
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_token_secret)
 
+filepath = Path(Path(__file__).resolve()).parent
 
-def collection(top_words_df):
-    filepath = f"{Path(Path(__file__).resolve()).parent}/collection.csv"
-    if os.path.exists(filepath):
-        col = pd.read_csv(filepath)
+def user_collection(top_words_df):
+    file = f"{filepath}/user_collection.csv"
+    if os.path.exists(file):
+        col = pd.read_csv(file)
         col = pd.concat([col, top_words_df], axis=0)
-        col.to_csv(filepath, index=False)
+        col.to_csv(file, index=False)
     else:
-        top_words_df.to_csv(filepath, index=False)
+        top_words_df.to_csv(file, index=False)
+
+def keywords_collection(top_words_df):
+    file = f"{filepath}/keyword_collection.csv"
+    if os.path.exists(file):
+        col = pd.read_csv(file)
+        col = pd.concat([col, top_words_df], axis=0)
+        col.to_csv(file, index=False)
+    else:
+        top_words_df.to_csv(file, index=False)
 
 
 def get_top_words(user_name=None, keywords=None, min_freq=1):
@@ -87,10 +97,11 @@ def main(username, search):
         raise Exception('what?')
     elif username is not None:
         top_words = get_top_words(user_name=username)
-        collection(top_words_df=top_words)
+        user_collection(top_words_df=top_words)
         click.echo(top_words)
     else:
         top_words = get_top_words(keywords=search)
+        keywords_collection(top_words_df=top_words)
         click.echo(top_words)
 
 if __name__ == '__main__':
