@@ -73,12 +73,14 @@ def get_top_words(user_name=None, keywords=None, min_freq=1):
     cleaner = TextCleaner()
     clean_df = cleaner.get_clean_text(text=all_tweets)
     clean_df = clean_df[clean_df['count'] > min_freq]
-    clean_df = clean_df.head(10)
+
     if user_name is not None:
         clean_df['username'] = user_name
     elif keywords is not None:
         clean_df = clean_df[~clean_df.word.isin(keywords.lower().split())]
         clean_df['keywords'] = keywords
+
+    clean_df = clean_df.head(10)
 
     # add time
     today = datetime.now()
